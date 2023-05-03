@@ -1,0 +1,60 @@
+Bootstrap: localimage
+From: airl_env_qdax_12fadad2.sif
+
+%labels
+    Author adaptive.intelligent.robotics@gmail.com
+    Version v0.0.1
+
+%environment
+   export PYTHONPATH=$PYTHONPATH:/workspace/lib/python3.8/site-packages/
+   export LD_LIBRARY_PATH="/workspace/lib:$LD_LIBRARY_PATH"
+   export PATH=$PATH:/usr/local/go/bin
+
+%post
+   export LD_LIBRARY_PATH="/workspace/lib:$LD_LIBRARY_PATH"
+   apt-get update -y
+   apt-get install -y tmux
+   apt-get install -y libglfw3
+   apt-get install -y libgl1-mesa-glx libosmesa6
+
+   pip3 install --upgrade pip
+   pip3 install --upgrade Pillow absl-py dm_env etils flask flask_cors flax grpcio gym jax jaxopt jinja2 mujoco numpy optax pytinyrenderer
+   pip3 install --upgrade scipy tensorboardX "trimesh==3.9.35" typing-extensions dataclasses pytest transforms3d
+   pip3 install --upgrade "jax[cuda12_local]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+   pip3 install -U typing_extensions
+
+
+   #==================================================================================
+   exit 0 #NOTFORFINAL - the lines below this "exit" will be executed only when building the final image
+   #==================================================================================
+
+   # Enter working directory
+   cd /git/exp/
+
+   #CLONEHERE
+
+%runscript
+   # TODO: add runscript
+   # TODO: add json file
+   CURPATH=$(pwd)
+
+   # Create results folders
+    echo
+    echo "Entering directory /git/exp/qd-robust/"
+    cd /git/exp/qd-robust/
+
+    # Getting seed
+    SEED="$(shuf -i 1000-5000 -n 1)"
+
+    # Running the script
+    echo
+    echo "HYDRA_OUTPUT_DIR=$CURPATH python3 main.py "$@" task.seed=$SEED"
+    echo
+    HYDRA_OUTPUT_DIR=$CURPATH python3 -u main.py "$@" task.seed=$SEED
+
+
+%apprun gen_job_scripts
+    python3 /git/exp/qd-robust/submodules/gitlab_notebook/gen_job_script.py "$@"
+
+%help
+    This is the development and running environment of QDax

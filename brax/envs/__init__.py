@@ -18,6 +18,7 @@
 import functools
 from typing import Optional, Type
 
+from brax.envs import a1
 from brax.envs import ant
 from brax.envs import fast
 from brax.envs import half_cheetah
@@ -33,6 +34,7 @@ from brax.envs import wrapper
 from brax.envs.env import Env, State, Wrapper
 
 _envs = {
+    'a1': a1.A1,
     'ant': ant.Ant,
     'fast': fast.Fast,
     'halfcheetah': half_cheetah.Halfcheetah,
