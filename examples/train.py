@@ -25,7 +25,7 @@ from brax.training.agents.sac import train as sac
 
 #@title Load Env { run: "auto" }
 
-env_name = 'ant'  # @param ['ant', 'halfcheetah', 'hopper', 'humanoid', 'humanoidstandup', 'inverted_pendulum', 'inverted_double_pendulum', 'pusher', 'reacher', 'walker2d']
+env_name = 'a1'  # @param ['ant', 'halfcheetah', 'hopper', 'humanoid', 'humanoidstandup', 'inverted_pendulum', 'inverted_double_pendulum', 'pusher', 'reacher', 'walker2d']
 backend = 'generalized'  # @param ['generalized', 'positional', 'spring']
 
 env = envs.get_environment(env_name=env_name,
@@ -40,6 +40,7 @@ with open(f'initial_a1.html',
     f.write(html_data)
 
 print("saved HTML data")
+# exit(0)
 
 #@title Training
 
