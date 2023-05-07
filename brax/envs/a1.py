@@ -195,10 +195,13 @@ class A1(PipelineEnv):
     rng, rng1, rng2 = jax.random.split(rng, 3)
 
     low, hi = -self._reset_noise_scale, self._reset_noise_scale
-    q = self.sys.init_q + jax.random.uniform(
-        rng1, (self.sys.q_size(),), minval=low, maxval=hi
-    )
-    qd = hi * jax.random.normal(rng2, (self.sys.qd_size(),))
+    # q = self.sys.init_q + jax.random.uniform(
+    #     rng1, (self.sys.q_size(),), minval=low, maxval=hi
+    # )
+    q = self.sys.init_q
+
+    # qd = hi * jax.random.normal(rng2, (self.sys.qd_size(),))
+    qd = jax.numpy.zeros((self.sys.qd_size(),))
 
     pipeline_state = self.pipeline_init(q, qd)
     obs = self._get_obs(pipeline_state)
