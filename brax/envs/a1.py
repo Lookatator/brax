@@ -147,14 +147,14 @@ class A1(PipelineEnv):
       contact_cost_weight=5e-4,
       healthy_reward=1.0,
       terminate_when_unhealthy=True,
-      healthy_z_range=(0.2, 1.0),
+      healthy_z_range=(0.05, 1.0),
       contact_force_range=(-1.0, 1.0),
       reset_noise_scale=0.1,
       exclude_current_positions_from_observation=True,
       backend='generalized',
       **kwargs,
   ):
-    path = epath.resource_path('brax') / 'envs/assets/a1.xml'
+    path = epath.resource_path('brax') / 'envs/assets/a1/a1.xml'
     sys = mjcf.load(path)
 
     n_frames = 5

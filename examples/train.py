@@ -49,7 +49,9 @@ train_fn = {
   'inverted_pendulum': functools.partial(ppo.train, num_timesteps=2_000_000, num_evals=20, reward_scaling=10, episode_length=1000, normalize_observations=True, action_repeat=1, unroll_length=5, num_minibatches=32, num_updates_per_batch=4, discounting=0.97, learning_rate=3e-4, entropy_cost=1e-2, num_envs=2048, batch_size=1024, seed=1),
   'inverted_double_pendulum': functools.partial(ppo.train, num_timesteps=20_000_000, num_evals=20, reward_scaling=10, episode_length=1000, normalize_observations=True, action_repeat=1, unroll_length=5, num_minibatches=32, num_updates_per_batch=4, discounting=0.97, learning_rate=3e-4, entropy_cost=1e-2, num_envs=2048, batch_size=1024, seed=1),
   'ant': functools.partial(ppo.train,  num_timesteps=50_000_000, num_evals=10, reward_scaling=10, episode_length=1000, normalize_observations=True, action_repeat=1, unroll_length=5, num_minibatches=32, num_updates_per_batch=4, discounting=0.97, learning_rate=3e-4, entropy_cost=1e-2, num_envs=4096, batch_size=2048, seed=1),
-  'a1': functools.partial(ppo.train,  num_timesteps=50_000_000, num_evals=10, reward_scaling=10, episode_length=1000, normalize_observations=True, action_repeat=1, unroll_length=5, num_minibatches=32, num_updates_per_batch=4, discounting=0.97, learning_rate=3e-4, entropy_cost=1e-2, num_envs=4096, batch_size=2048, seed=1),
+  
+  'a1': functools.partial(ppo.train,  num_timesteps=10_000, num_evals=10, reward_scaling=10, episode_length=1000, normalize_observations=True, action_repeat=1, unroll_length=5, num_minibatches=32, num_updates_per_batch=4, discounting=0.97, learning_rate=3e-4, entropy_cost=1e-2, num_envs=4096, batch_size=2048, seed=1),
+  
   'humanoid': functools.partial(ppo.train,  num_timesteps=50_000_000, num_evals=10, reward_scaling=0.1, episode_length=1000, normalize_observations=True, action_repeat=1, unroll_length=10, num_minibatches=32, num_updates_per_batch=8, discounting=0.97, learning_rate=3e-4, entropy_cost=1e-3, num_envs=2048, batch_size=1024, seed=1),
   'reacher': functools.partial(ppo.train, num_timesteps=50_000_000, num_evals=20, reward_scaling=5, episode_length=1000, normalize_observations=True, action_repeat=4, unroll_length=50, num_minibatches=32, num_updates_per_batch=8, discounting=0.95, learning_rate=3e-4, entropy_cost=1e-3, num_envs=2048, batch_size=256, max_devices_per_host=8, seed=1),
   'humanoidstandup': functools.partial(ppo.train, num_timesteps=100_000_000, num_evals=20, reward_scaling=0.1, episode_length=1000, normalize_observations=True, action_repeat=1, unroll_length=15, num_minibatches=32, num_updates_per_batch=8, discounting=0.97, learning_rate=6e-4, entropy_cost=1e-2, num_envs=2048, batch_size=1024, seed=1),
@@ -80,6 +82,7 @@ def progress(num_steps, metrics):
 
   print("num steps: ", num_steps)
   print("episode reward: ", metrics['eval/episode_reward'])
+  print("metrics['eval/avg_episode_length']", metrics['eval/avg_episode_length'])
 
 make_inference_fn, params, _ = train_fn(environment=env, progress_fn=progress)
 
@@ -89,3 +92,26 @@ print(f'time to train: {times[-1] - times[1]}')
 model.save_params('params', params)
 params = model.load_params('params')
 inference_fn = make_inference_fn(params)
+
+# create an env with auto-reset
+env = envs.create(env_name=env_name, backend=backend)
+
+jit_env_reset = jax.jit(env.reset)
+jit_env_step = jax.jit(env.step)
+jit_inference_fn = jax.jit(inference_fn)
+
+rollout = []
+rng = jax.random.PRNGKey(seed=1)
+state = jit_env_reset(rng=rng)
+for _ in range(1000):
+  rollout.append(state.pipeline_state)
+  act_rng, rng = jax.random.split(rng)
+  act, _ = jit_inference_fn(state.obs, act_rng)
+  state = jit_env_step(state, act)
+
+b_html = HTML(html.render(env.sys.replace(dt=env.dt), rollout))
+html_data = b_html.data
+
+with open(f'trained_a1.html',
+            'w') as f:
+    f.write(html_data)
